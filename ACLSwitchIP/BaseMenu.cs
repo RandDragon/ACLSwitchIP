@@ -12,9 +12,39 @@ namespace ACLSwitchIP
 {
     public partial class BaseMenu : Form
     {
+        WorkDataBase useDB;
+        
+
         public BaseMenu()
         {
             InitializeComponent();
+            useDB = new WorkDataBase();
+
+        }
+
+        
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void grid_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+
+        private void btnFind_Click(object sender, EventArgs e)
+        {
+            useDB.resultFind(tboxSwitch.Text);
+            grid.DataSource = null;
+            grid.DataSource = useDB.ClientSort;
+            
+        }
+
+        private void saveAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            useDB.SaveDB(useDB.ClientList);
         }
     }
 }

@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace ACLSwitchIP
 {
-    class Client
+    public class Client
     {
 
-        public int Port { get; private set; }
-        public string Commutator { get; private set; }
-        public string Ip { get; private set; }
-        public string SwitchName { get; private set; }
+        public int Port { get; set; }
+        public string Commutator { get; set; }
+        public string Ip { get; set; }
+        public string SwitchName { get; set; }
         public bool aclIP { get; set; }
 
 
@@ -25,5 +25,7 @@ namespace ACLSwitchIP
             SwitchName = commutator + ".vs.bcitelecom.ru";
             aclIP = false;
         }
+
+        public Client() { }
     }
 }

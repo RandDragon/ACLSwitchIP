@@ -59,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="Properties\DataSources\BaseMenu.datasource" />
     <None Include="Properties\LoadDB.csv" />
   </ItemGroup>
   <ItemGroup>
