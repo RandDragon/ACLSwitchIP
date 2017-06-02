@@ -13,16 +13,21 @@ namespace ACLSwitchIP
     public partial class BaseMenu : Form
     {
         WorkDataBase useDB;
+       
+        
+        
         
 
         public BaseMenu()
         {
             InitializeComponent();
             useDB = new WorkDataBase();
-
+            
+            
+            
+      
         }
 
-        
 
         private void label2_Click(object sender, EventArgs e)
         {
@@ -31,7 +36,7 @@ namespace ACLSwitchIP
 
         private void grid_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-
+            
         }
 
         private void btnFind_Click(object sender, EventArgs e)
@@ -46,5 +51,18 @@ namespace ACLSwitchIP
         {
             useDB.SaveDB(useDB.ClientList);
         }
+
+        private void updateToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            useDB.Update(useDB.ClientList);
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show(ActionACL.addACL(useDB.ClientSort));
+            
+        }
+
+       
     }
 }

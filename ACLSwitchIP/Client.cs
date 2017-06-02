@@ -14,6 +14,7 @@ namespace ACLSwitchIP
         public string Ip { get; set; }
         public string SwitchName { get; set; }
         public bool aclIP { get; set; }
+        public int ID { get; }
 
 
 
@@ -27,5 +28,15 @@ namespace ACLSwitchIP
         }
 
         public Client() { }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            //if (this.ID == (obj as Client).ID) return true;
+            if (this.Ip == (obj as Client).Ip && this.SwitchName == (obj as Client).SwitchName && this.Ip == (obj as Client).Ip) return true;
+            else 
+            return false;
+        }
     }
 }
