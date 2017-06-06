@@ -7,13 +7,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Resources;
 
 namespace ACLSwitchIP
 {
     public partial class BaseMenu : Form
     {
         WorkDataBase useDB;
-       
+        BindingSource bindingS;
         
         
         
@@ -21,8 +22,11 @@ namespace ACLSwitchIP
         public BaseMenu()
         {
             InitializeComponent();
-            useDB = new WorkDataBase();
             
+            useDB = new WorkDataBase();
+            //useDB.LoadDB();
+            bindingS = new BindingSource();
+
             
             
       
@@ -41,10 +45,29 @@ namespace ACLSwitchIP
 
         private void btnFind_Click(object sender, EventArgs e)
         {
-            useDB.resultFind(tboxSwitch.Text);
-            grid.DataSource = null;
+            if(tboxPortSwitch.Text!="" || tboxSwitch.Text!="" || tboxName.Text!="")
+            {
+                if(tboxPortSwitch.Text!="")
+                {
+                    useDB.FindClient(tboxPortSwitch.Text, 0);
+                }
+                if(tboxSwitch.Text!="")
+                {
+                    useDB.FindClient(tboxSwitch.Text, 1);
+                }
+                if(tboxName.Text!="")
+                {
+                    useDB.FindClient(tboxName.Text, 2);
+                }
+            }
+
+
+            bindingS.DataSource = useDB.ClientSort;
             grid.DataSource = useDB.ClientSort;
-            
+            //grid.DataMember = "ClientSort";
+
+            grid.AutoSizeRowsMode =
+               DataGridViewAutoSizeRowsMode.DisplayedCellsExceptHeaders;
         }
 
         private void saveAllToolStripMenuItem_Click(object sender, EventArgs e)
@@ -57,12 +80,21 @@ namespace ACLSwitchIP
             useDB.Update(useDB.ClientList);
         }
 
-        private void button1_Click(object sender, EventArgs e)
+
+
+
+        private void btnACL_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(ActionACL.addACL(useDB.ClientSort));
             
+            MessageBox.Show(ActionACL.aclAddPort(useDB.ClientSort));
+
         }
 
-       
+        public  static void CreateMess(string str)
+        {
+            MessageBox.Show(str);
+        }
+
+        
     }
 }

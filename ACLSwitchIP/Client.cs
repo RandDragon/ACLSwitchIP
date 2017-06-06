@@ -8,24 +8,23 @@ namespace ACLSwitchIP
 {
     public class Client
     {
+        public int ID { get; set; }
+        public string Name { get; set; }
+        public bool ACL { get; set; }
+        
+        public ClientInternet Internet { get; set; }
+        public ClientIPTV IPTV { get; set; }
+        public ClientPhone Phone { get; set; }
+        
 
-        public int Port { get; set; }
-        public string Commutator { get; set; }
-        public string Ip { get; set; }
-        public string SwitchName { get; set; }
-        public bool aclIP { get; set; }
-        public int ID { get; }
-
-
-
-        public Client (int port, string commutator, string ip)
+        public Client (int id, string name)
         {
-            Port = port;
-            Commutator = commutator;
-            Ip = ip;
-            SwitchName = commutator + ".vs.bcitelecom.ru";
-            aclIP = false;
+            ID = id;
+            Name = name;
+            ACL = false;
         }
+
+        
 
         public Client() { }
 
@@ -33,8 +32,7 @@ namespace ACLSwitchIP
         {
             if (obj == null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            //if (this.ID == (obj as Client).ID) return true;
-            if (this.Ip == (obj as Client).Ip && this.SwitchName == (obj as Client).SwitchName && this.Ip == (obj as Client).Ip) return true;
+            if (this.ID == (obj as Client).ID) return true;
             else 
             return false;
         }

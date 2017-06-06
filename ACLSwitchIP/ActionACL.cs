@@ -13,7 +13,7 @@ namespace ACLSwitchIP
     {
         static private StreamWriter sw;
         static private TelnetConnection tc;
-        static string[] commands = new string[3];
+
 
         private static bool CommandUse(string command)
         {
@@ -26,24 +26,25 @@ namespace ACLSwitchIP
                     sw.Write(str);
                     return true;
                 }
-                
+
             }
 
-            catch {  }
+            catch { }
             sw.Write(str);
             return false;
-            
-            
         }
 
 
-        public static string addACL(List<Client> clients)
+        public static string aclAddPort(List<Client> clients)
         {
-            
+
             DateTime time = DateTime.Now;
             String FileName = "LogACL" + time.ToShortDateString() + ".";
-            sw = new StreamWriter(FileName, true, Encoding.GetEncoding(1251));
-            
+            try
+            {
+                sw = new StreamWriter(FileName, true, Encoding.GetEncoding(1251));
+            }
+            catch { throw new Exception("Проблема доступа к лог-файлу"); }
 
             if (clients.Count > 0)
             {
@@ -51,68 +52,63 @@ namespace ACLSwitchIP
                 {
                     foreach (Client client in clients)
                     {
-
-                        try
+                        
+                        if (client.Internet!=null && client.Phone == null && client.IPTV == null)
                         {
-                            commands[0] = string.Format("create access_profile profile_id 4 profile_name allow_ip ip source_ip_mask 255.255.255.255");
-                            commands[1] = string.Format("config access_profile profile_id 4 add access_id {0} ip source_ip {1} port {2} permit", client.Port, client.Ip, client.Port);
-                            commands[2] = string.Format("config access_profile profile_id 4 add access_id {0} ip source_ip {1} mask {2} port {3} deny", client.Port + 100, "0.0.0.0", "0.0.0.0", client.Port);
-
-                            tc = new TelnetConnection(client.SwitchName, 23);
-                            string s = tc.Login("roman", "hme55cumo", 600);
-                            //sw.Write(s);
-                            string prompt = s.TrimEnd();
-                            prompt = s.Substring(prompt.Length - 1, 1);
-                            if (prompt != "#" && prompt != ">")
-                                throw new Exception("Connection failed");
-
-                            prompt = "";
-
-                            for (int i = 0; i < commands.Length; i++)
+                            try
                             {
-                                if (CommandUse(commands[i]))
+                                string[] commandsInt = CreateCommandInternet(client);
+                                
+                                sw.WriteLine(LogClientData(client));
+
+                                tc = new TelnetConnection(client.Internet.Commutator, 23);
+                                string s = tc.Login("roman", "hme55cumo", 600);
+                                //sw.Write(s);
+                                string prompt = s.TrimEnd();
+                                prompt = s.Substring(prompt.Length - 1, 1);
+                                if (prompt != "#" && prompt != ">")
+                                    throw new Exception("Connection failed");
+
+                                prompt = "";
+
+                                for (int i = 0; i < commandsInt.Length; i++)
                                 {
-                                    try
+                                    if (i != 1)
                                     {
-                                        sw.Close();
+                                        if (CommandUse(commandsInt[i]))
+                                        {
+                                            if (i == 5) Thread.CurrentThread.Join(1000);
+                                            try
+                                            {
+                                                sw.Close();
+                                            }
+                                            catch { }
+                                            finally
+                                            {
+                                                throw new Exception(string.Format("Возникла проблема, при добавлении ACL для клиента : {0}", client.ID));
+                                            }
+                                        }
                                     }
-                                    catch { }
-                                    finally
+                                    else
                                     {
-                                        throw new Exception(string.Format("Возникла проблема, при добавлении ACL для клиента : {0}", client.ID));
+                                        tc.WriteLine(commandsInt[1]);
+                                        string str = tc.Read();
+                                        str = null;
                                     }
+
                                 }
 
+                                sw.Close();
+
+
+                                client.ACL = true;
                             }
-
-                            sw.Close();
-                            //StreamReader sr = new StreamReader(FileName);
-
-                            //while (!sr.EndOfStream)
-                            //{
-                            //    try
-                            //    {
-                            //        if (sr.ReadLine().Contains("Fail"))
-                            //        {
-                            //            return string.Format("Возникла проблема, при добавлении ACL для клиента : {0}", client.ID);
-                            //            throw new Exception("Read log file");
-                            //        }
-                            //    }
-
-                            //    catch ( Exception e)
-                            //    {
-                            //        break;
-                            //    }
-
-                            //}
-                            //sr.Close();
-
-                            client.aclIP = true;
+                            catch (Exception e)
+                            {
+                                throw e;
+                            }
                         }
-                        catch (Exception e)
-                        {
-                            throw e;
-                        }
+                        else BaseMenu.CreateMess("Приложение работает лишь для клиентов ТОЛЬКО с услугой Интернет");
                     }
                 }
                 catch (Exception e)
@@ -124,6 +120,63 @@ namespace ACLSwitchIP
 
         }
 
-        
+        private static string LogClientData(Client client)
+        {
+            return String.Format("Создание ACL для клиента {0}. Коммутатор - {1}. Порт {2}", client.Name, client.Internet.Commutator, client.Internet.Port);
+        }
+
+        private static string[] CreateCommandInternet(Client client)
+        {
+            string[] command = new string[6];
+            command[0] = "config filter extensive_netbios 1-28 state disable";
+            command[1] = string.Format("create access_profile profile_id 4 profile_name allow_ip ip source_ip_mask 255.255.255.255");
+            command[2] = string.Format("config access_profile profile_id 4 add access_id {0} ip source_ip {1} port {2} permit", client.Internet.Port, client.Internet.Ip, client.Internet.Port);
+            command[3] = string.Format("config access_profile profile_id 4 add access_id {0} ip source_ip {1} mask {2} port {3} deny", client.Internet.Port + 200, "0.0.0.0", "0.0.0.0", client.Internet.Port);
+            command[4] = "save all";
+            command[5] = "exit";
+            return command;
+        }
+
+        //private static string[] CreateCommandPhone(Client client)
+        //{
+        //    string[] command = new string[4];
+        //    if (client.Internet == null)
+        //    {
+        //        command[0] = "config filter extensive_netbios 1-28 state disable";
+        //        command[1] = string.Format("create access_profile profile_id 4 profile_name allow_ip ip source_ip_mask 255.255.255.255");
+        //    }
+        //}
+
+        //private static string[] CreateCommandIPTV(Client client)
+        //{
+
+        //}
+
+        private static void StartUseCommand(string[] commands)
+        {
+            for (int i = 0; i < commands.Length; i++)
+            {
+                if (i != 1)
+                {
+                    if (CommandUse(commands[i]))
+                    {
+                        try
+                        {
+                            sw.Close();
+                        }
+                        catch { throw new Exception(string.Format("Возникла проблема, при добавлении ACL для клиента")); }
+                    }
+                }
+                else
+                {
+                    tc.WriteLine(commands[1]);
+                    Thread.CurrentThread.Join(30);
+                    string str = tc.Read();
+                    str = null;
+                }
+
+            }
+            
+        }
     }
 }
